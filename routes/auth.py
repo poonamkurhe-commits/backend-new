@@ -51,11 +51,10 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-@router.post("/register", response_model=dict)
+@router.post("/register")
 async def register(user_data: UserCreate):
     db = Database.get_collection("users")
     
-    # Check if email already exists
     existing_email = await db.find_one({"email": user_data.email})
     if existing_email:
         raise HTTPException(
@@ -63,7 +62,6 @@ async def register(user_data: UserCreate):
             detail="Email already registered. Please login."
         )
     
-    # Check if username already exists
     existing_username = await db.find_one({"username": user_data.username})
     if existing_username:
         raise HTTPException(
@@ -71,7 +69,6 @@ async def register(user_data: UserCreate):
             detail="Username already taken. Please choose different username."
         )
     
-    # Create user
     user = User(
         username=user_data.username,
         email=user_data.email,
@@ -94,22 +91,19 @@ async def register(user_data: UserCreate):
 async def login(user_data: UserLogin):
     db = Database.get_collection("users")
     
-    # Find user by email
     user = await db.find_one({"email": user_data.email})
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password. Please try again."
+            detail="Invalid email or password."
         )
     
-    # Verify password
     if not verify_password(user_data.password, user["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password. Please try again."
+            detail="Invalid email or password."
         )
     
-    # Generate token
     user_id = str(user["_id"])
     token = create_token(user_id, user["username"])
     
@@ -131,7 +125,7 @@ async def get_me(current_user = Depends(get_current_user)):
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found. Please login again."
+            detail="User not found."
         )
     
     return UserResponse(

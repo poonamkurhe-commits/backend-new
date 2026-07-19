@@ -3,9 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 from database.connection import Database
-from routes import auth, questions, results
+from routes import auth, questions, results, subjects  # Add subjects here
 
 load_dotenv()
 
@@ -32,24 +33,24 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS middleware - Allow frontend to access API
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://localhost:3000",
         "http://localhost:5174",
-        os.getenv("FRONTEND_URL", "*")  # Allow custom frontend URL
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Routes
+# Routes - Make sure subjects is included
 app.include_router(auth.router)
 app.include_router(questions.router)
 app.include_router(results.router)
+app.include_router(subjects.router)  # Add this line
 
 @app.get("/")
 async def root():
@@ -65,7 +66,6 @@ async def root():
 async def health_check():
     """Health check endpoint for monitoring"""
     try:
-        # Check database connection
         db = Database.get_collection("users")
         await db.find_one({})
         return {

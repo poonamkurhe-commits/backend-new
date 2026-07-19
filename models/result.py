@@ -1,12 +1,15 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import List
+from typing import Union
 from pydantic import BaseModel, Field
+
 
 class AnswerSubmission(BaseModel):
     question_id: str
-    answer: str  # Can be option index, text, or code
+    answer: int          # MCQ असल्यामुळे int पुरेसा आहे
     is_correct: bool
-    time_taken: int  # in seconds
+    time_taken: int
+
 
 class Result(BaseModel):
     user_id: str
@@ -16,8 +19,7 @@ class Result(BaseModel):
     score: float
     total_questions: int
     correct_answers: int
-    time_spent: int  # total seconds
+    time_spent: int
     completed_at: datetime = Field(default_factory=datetime.utcnow)
-    
-    class Config:
-        collection = "results"
+
+Result.model_rebuild()
